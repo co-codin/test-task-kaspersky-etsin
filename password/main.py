@@ -3,6 +3,7 @@ import time
 import requests
 import argparse
 import os
+from requests.exceptions import RequestException, Timeout
 
 avoidance_patterns = [
     r"^[0-9]+$",  # Avoid using all numeric passwords
@@ -60,9 +61,40 @@ class Bruter:
                 'success': lambda r: 'reddit_session' in r.cookies
             }
         }
-    def usercheck(self):
-        pass
-    
+
+    def usercheck(self, username):
+        try:
+            headers = {
+                'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+                'Accept-Language': 'en-US,en;q=0.5',
+                'Connection': 'keep-alive',
+            }
+
+            if self.service.startswith('http'):
+                return 0
+
+            if self.service == "facebook":
+                if self.fb_name:
+                    r = self.session.get(f"https://www.facebook.com/public/{self.fb_name}", headers=headers)
+                    return 0 if "We couldn't find anything" not in r.text else 1
+                return 0
+
+            elif self.service == "twitter":
+                r = self.session.get(f"https://x.com/{username}", headers=headers)
+                return 0 if r.status_code != 404 else 1
+
+            elif self.service == "reddit":
+                r = self.session.get(f"https://www.reddit.com/user/{username}/about.json", headers=headers)
+                return 0 if r.status_code != 404 else 1
+
+            elif self.service in self.service_configs:
+                return 0
+            return 0
+        except RequestException as e:
+            print(f"[Warning] Error checking username: {str(e)}")
+            return 0
+
     def webBruteforce(self):
         pass
 
