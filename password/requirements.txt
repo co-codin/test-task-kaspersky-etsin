@@ -1,3 +1,10 @@
 proxyscrape>=0.3.0
 requests>=2.26.0
 argparse>=1.4.0
+PySocks>=1.7.1
+urllib3>=1.26.7
+mechanize>=0.4.7
+beautifulsoup4>=4.9.3
+tqdm>=4.62.3
+python-dotenv>=0.19.2
+cryptography>=3.4.7

