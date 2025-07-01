@@ -1,5 +1,6 @@
 from proxyscrape import create_collector, get_collector
 import time
+import requests
 
 avoidance_patterns = [
     r"^[0-9]+$",  # Avoid using all numeric passwords
@@ -15,7 +16,13 @@ proxies = [
 ]
 
 class Bruter:
-    def __init__(self, verbose=False):
+    def __init__(self, service, username, wordlist, delay, fb_name=None, verbose=False):
+        self.service = service
+        self.username = username
+        self.wordlist = wordlist
+        self.delay = delay
+        self.fb_name = fb_name
+        self.session = requests.Session()
         self.verbose = verbose
         self.start_time = time.time()
         self.attempts = 0
