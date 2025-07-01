@@ -60,8 +60,23 @@ class Bruter:
                 'success': lambda r: 'reddit_session' in r.cookies
             }
         }
-    def execute(self):
+    def usercheck(self):
         pass
+    
+    def webBruteforce(self):
+        pass
+
+    def execute(self):
+        if self.usercheck(self.username) == 1:
+            print(f"[Error] Username '{self.username}' does not exist")
+            exit(1)
+
+        if self.service.startswith('http'):
+            print("[*] Custom URL: Skipping username check")
+        else:
+            print(f"[+] Username '{self.username}' found")
+
+        self.webBruteforce(self.username, self.wordlist, self.service, self.delay)
 
 def main():
     parser = argparse.ArgumentParser(
