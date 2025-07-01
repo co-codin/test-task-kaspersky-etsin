@@ -1,6 +1,7 @@
 from proxyscrape import create_collector, get_collector
 import time
 import requests
+import argparse
 
 avoidance_patterns = [
     r"^[0-9]+$",  # Avoid using all numeric passwords
@@ -58,3 +59,19 @@ class Bruter:
                 'success': lambda r: 'reddit_session' in r.cookies
             }
         }
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Тестовое задание Ецин"
+    )
+    required = parser.add_argument_group("required arguments")
+    required.add_argument("-s", "--service", dest="service", required=True,
+                          help="Service name (facebook, etc.) or full URL")
+    required.add_argument("-u", "--username", dest="username", required=True)
+    required.add_argument("-w", "--wordlist", dest="password", required=True)
+    parser.add_argument("-d", "--delay", type=int, dest="delay", default=1,
+                        help="Delay between attempts (default: 1)")
+    parser.add_argument("-v", "--verbose", action="store_true",
+                        help="Show detailed output for each attempt")
+
+    
