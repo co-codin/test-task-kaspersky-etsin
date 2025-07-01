@@ -95,7 +95,7 @@ class Bruter:
             print(f"[Warning] Error checking username: {str(e)}")
             return 0
 
-    def webBruteforce(self):
+    def webBruteforce(self, username, wordlist, service, delay):
         pass
 
     def execute(self):
