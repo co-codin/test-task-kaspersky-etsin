@@ -7,3 +7,6 @@ sudo nano /etc/proxychains4.conf
 
 ```КАК ИСПОЛЬЗОВАТЬ - ```
 ```python3 devbrute.py -s twitter -u testuser -w passwords.txt -d 1```
+
+
+время выполнения - 46 мин
